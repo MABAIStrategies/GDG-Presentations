@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gemini App · Lesson 1 of 5 · GDG × MAB AI Strategies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* GOOGLE ZONE */
+    --g-bg-0:#000000;
+    --g-bg-1:#06061a;
+    --g-bg-2:#0a0a24;
+    --g-text:#ffffff;
+    --g-text-dim:#a8a8c8;
+    --g-text-mute:#6a6a86;
+    --g-blue:#4285F4;
+    --g-red:#EA4335;
+    --g-yellow:#FBBC04;
+    --g-green:#34A853;
+    --g-cyan:#00d4ff;
+    --g-magenta:#ff58e0;
+    --g-lime:#b9ff66;
+    --g-line:rgba(255,255,255,0.10);
+
+    /* MAB ZONE — flat, per Brand Bible Vol 01 */
+    --m-obsidian:#0D0D0B;
+    --m-ink:#1F1F1C;
+    --m-ash:#3F3F3A;
+    --m-stone:#5F5E5A;
+    --m-fog:#888780;
+    --m-bone:#ECE4D3;
+    --m-bone-mute:#C4BDAE;
+    --m-lilac:#BFAEC9;
+    --m-butter:#F0D898;
+    --m-gold:#C9A96E;
+    --m-ember:#C8896A;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{
+    width:100%;height:100%;overflow:hidden;
+    background:#000;color:#fff;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* STAGE = fixed 1920x1080 logical canvas, scaled to fit window */
+  #stage{
+    position:fixed;inset:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #frame{
+    position:relative;
+    width:1920px;height:1080px;
+    transform-origin:center center;
+    background:#000;
+  }
+
+  .slide{
+    position:absolute;inset:0;
+    opacity:0;pointer-events:none;
+    transition:opacity 480ms ease;
+    overflow:hidden;
+  }
+  .slide.active{opacity:1;pointer-events:auto}
+
+  /* ======== GOOGLE ZONE ======== */
+  .g{
+    background:
+      radial-gradient(1200px 800px at 12% 18%, rgba(66,133,244,0.18), transparent 60%),
+      radial-gradient(1100px 900px at 92% 88%, rgba(255,88,224,0.16), transparent 65%),
+      radial-gradient(900px 700px at 88% 10%, rgba(251,188,4,0.10), transparent 60%),
+      radial-gradient(1000px 800px at 8% 92%, rgba(52,168,83,0.12), transparent 60%),
+      linear-gradient(180deg, #000 0%, #05051a 60%, #08081f 100%);
+    color:var(--g-text);
+  }
+
+  /* subtle starfield grain */
+  .g::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(1px 1px at 23% 17%, rgba(255,255,255,0.55), transparent 60%),
+      radial-gradient(1px 1px at 47% 71%, rgba(255,255,255,0.4), transparent 60%),
+      radial-gradient(1px 1px at 73% 32%, rgba(255,255,255,0.5), transparent 60%),
+      radial-gradient(1px 1px at 88% 64%, rgba(255,255,255,0.35), transparent 60%),
+      radial-gradient(1px 1px at 11% 53%, rgba(255,255,255,0.4), transparent 60%),
+      radial-gradient(1px 1px at 33% 88%, rgba(255,255,255,0.3), transparent 60%);
+    opacity:0.6;
+  }
+
+  /* HEADER & FOOTER RAILS (Google zone) */
+  .g .rail-top{
+    position:absolute;top:48px;left:64px;right:64px;
+    display:flex;justify-content:space-between;align-items:center;
+    z-index:5;
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;letter-spacing:0.22em;color:var(--g-text-mute);
+    text-transform:uppercase;
+  }
+  .g .rail-top .kicker{color:var(--g-cyan)}
+  .g .rail-bottom{
+    position:absolute;bottom:40px;left:64px;right:64px;
+    display:flex;justify-content:space-between;align-items:center;
+    z-index:5;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;letter-spacing:0.2em;color:var(--g-text-mute);
+    text-transform:uppercase;
+  }
+  .g .rail-bottom .nav{display:flex;gap:28px}
+  .g .rail-bottom .nav span{opacity:0.4;transition:opacity .2s,color .2s}
+  .g .rail-bottom .nav span.on{opacity:1;color:var(--g-cyan)}
+
+  /* HERO SVG — iridescent loops */
+  @keyframes spin-slow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @keyframes spin-rev{from{transform:rotate(0)}to{transform:rotate(-360deg)}}
+  @keyframes hue{from{filter:hue-rotate(0)}to{filter:hue-rotate(360deg)}}
+  @keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+  @keyframes pulse-glow{0%,100%{filter:drop-shadow(0 0 60px rgba(255,88,224,0.45)) drop-shadow(0 0 120px rgba(0,212,255,0.3))}50%{filter:drop-shadow(0 0 90px rgba(255,88,224,0.65)) drop-shadow(0 0 160px rgba(0,212,255,0.5))}}
+
+  .hero-loop{
+    position:absolute;
+    width:760px;height:760px;
+    animation:float-y 11s ease-in-out infinite, pulse-glow 7s ease-in-out infinite;
+  }
+  .hero-loop svg{width:100%;height:100%;animation:spin-slow 38s linear infinite}
+  .hero-loop.alt svg{animation:spin-rev 44s linear infinite}
+  .hero-small{width:520px;height:520px}
+  .hero-tiny{width:380px;height:380px}
+
+  /* TYPOGRAPHY (Google zone) */
+  .g .kicker-line{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;letter-spacing:0.28em;
+    color:var(--g-cyan);
+    text-transform:uppercase;margin-bottom:28px;
+    display:inline-flex;align-items:center;gap:14px;
+  }
+  .g .kicker-line::before{
+    content:"";width:36px;height:1px;background:var(--g-cyan);
+  }
+
+  .g h1.title{
+    font-size:148px;line-height:0.92;letter-spacing:-0.045em;
+    font-weight:600;color:#fff;margin:0;
+  }
+  .g h1.title .grad{
+    background:linear-gradient(95deg,#4285F4 0%, #00d4ff 30%, #ff58e0 65%, #FBBC04 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .g h2.sec{
+    font-size:88px;line-height:0.96;letter-spacing:-0.035em;
+    font-weight:600;color:#fff;
+  }
+  .g h2.sec .grad{
+    background:linear-gradient(95deg,#4285F4 0%, #00d4ff 35%, #ff58e0 70%, #FBBC04 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .g h3.subhead{font-size:34px;line-height:1.15;font-weight:500;letter-spacing:-0.015em;color:#fff}
+  .g .lede{font-size:26px;line-height:1.45;color:var(--g-text-dim);max-width:980px;font-weight:400}
+  .g .body-l{font-size:22px;line-height:1.55;color:var(--g-text-dim);font-weight:400}
+  .g .body-m{font-size:19px;line-height:1.55;color:var(--g-text-dim);font-weight:400}
+  .g .mono-tag{
+    display:inline-block;font-family:'JetBrains Mono',monospace;
+    font-size:13px;letter-spacing:0.22em;color:var(--g-cyan);
+    border:1px solid rgba(0,212,255,0.45);padding:8px 16px;border-radius:999px;
+    text-transform:uppercase;
+  }
+
+  .g .discuss{
+    position:absolute;left:64px;right:64px;bottom:104px;
+    display:flex;align-items:center;gap:18px;
+    font-family:'Instrument Serif',serif;font-style:italic;
+    font-size:26px;color:var(--g-cyan);
+  }
+  .g .discuss .dlabel{
+    font-family:'JetBrains Mono',monospace;font-style:normal;
+    font-size:11px;letter-spacing:0.28em;color:var(--g-magenta);
+    text-transform:uppercase;border:1px solid rgba(255,88,224,0.45);
+    padding:6px 12px;border-radius:999px;flex-shrink:0;
+  }
+
+  /* CARD GRID (Google zone) */
+  .card-grid{display:grid;gap:22px}
+  .card-grid.c2{grid-template-columns:1fr 1fr}
+  .card-grid.c3{grid-template-columns:1fr 1fr 1fr}
+  .card-grid.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--g-line);
+    border-radius:14px;
+    padding:28px 28px 26px;
+    backdrop-filter:blur(8px);
+    position:relative;overflow:hidden;
+  }
+  .card .num{
+    font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.2em;
+    color:var(--g-cyan);margin-bottom:12px;
+  }
+  .card.blue .num{color:#7baffc}
+  .card.red .num{color:#ff8b80}
+  .card.yellow .num{color:#ffe27a}
+  .card.green .num{color:#7be39c}
+  .card.cyan .num{color:#7eeaff}
+  .card.magenta .num{color:#ff9be8}
+  .card .ct{font-size:22px;font-weight:600;color:#fff;margin-bottom:10px;letter-spacing:-0.01em;line-height:1.2}
+  .card .cb{font-size:16px;line-height:1.5;color:var(--g-text-dim)}
+
+  /* LIST */
+  .ladder-list{display:flex;flex-direction:column;gap:14px}
+  .ladder-row{
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--g-line);border-radius:12px;
+    padding:18px 26px;display:flex;align-items:center;gap:24px;
+  }
+  .ladder-badge{
+    width:44px;height:44px;border-radius:8px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:16px;color:#000;
+  }
+  .ladder-name{font-size:24px;font-weight:600;color:#fff;letter-spacing:-0.01em;flex-shrink:0;min-width:240px}
+  .ladder-desc{font-size:17px;color:var(--g-text-dim);line-height:1.4}
+
+  /* TOC */
+  .toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:46px}
+  .toc-card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--g-line);border-radius:18px;padding:38px 36px;
+    position:relative;overflow:hidden;
+  }
+  .toc-card::after{
+    content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
+    background:linear-gradient(135deg,transparent 60%,rgba(0,212,255,0.08));
+  }
+  .toc-num{
+    font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.28em;color:var(--g-cyan);margin-bottom:10px;
+  }
+  .toc-title{font-size:34px;font-weight:600;color:#fff;letter-spacing:-0.02em;margin-bottom:10px}
+  .toc-desc{font-size:17px;color:var(--g-text-dim);line-height:1.5}
+  .toc-pages{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.22em;
+    color:var(--g-magenta);margin-top:14px;text-transform:uppercase;
+  }
+
+  /* PROMPT ANATOMY */
+  .anatomy{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+  .ana{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--g-line);border-radius:12px;
+    padding:24px 18px;text-align:center;position:relative;
+  }
+  .ana .n{
+    font-family:'JetBrains Mono',monospace;font-size:48px;font-weight:600;
+    line-height:1;margin-bottom:14px;letter-spacing:-0.02em;
+  }
+  .ana .nm{font-size:20px;font-weight:600;color:#fff;margin-bottom:6px}
+  .ana .ds{font-size:13px;color:var(--g-text-mute);line-height:1.4}
+  .ana.c1 .n{color:#7baffc}
+  .ana.c2 .n{color:#7eeaff}
+  .ana.c3 .n{color:#ffe27a}
+  .ana.c4 .n{color:#ff8b80}
+  .ana.c5 .n{color:#ff9be8}
+  .ana.c6 .n{color:#7be39c}
+
+  /* SCRIPT BLOCK */
+  .script{
+    margin-top:30px;
+    background:rgba(0,0,0,0.5);
+    border:1px solid rgba(0,212,255,0.35);
+    border-radius:12px;padding:24px 28px;
+  }
+  .script .lbl{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.28em;
+    color:var(--g-cyan);margin-bottom:10px;text-transform:uppercase;
+  }
+  .script .txt{
+    font-family:'JetBrains Mono',monospace;font-size:16px;color:#fff;line-height:1.55;
+  }
+
+  /* ======== MAB ZONE ======== */
+  .mab{
+    background:var(--m-obsidian);color:var(--m-bone);
+  }
+  .mab .rail-top{
+    position:absolute;top:48px;left:80px;right:80px;
+    display:flex;justify-content:space-between;align-items:center;
+    z-index:5;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;letter-spacing:0.22em;color:var(--m-stone);
+    text-transform:uppercase;
+  }
+  .mab .rail-top .kicker{color:var(--m-gold)}
+  .mab .rail-bottom{
+    position:absolute;bottom:48px;left:80px;right:80px;
+    display:flex;justify-content:space-between;align-items:center;
+    z-index:5;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;letter-spacing:0.22em;color:var(--m-stone);
+    text-transform:uppercase;
+    border-top:0.5px solid var(--m-ash);
+    padding-top:24px;
+  }
+  .mab .rail-bottom .gold{color:var(--m-gold)}
+
+  .mab h1.thanks{
+    font-size:140px;line-height:0.94;letter-spacing:-0.04em;
+    font-weight:500;color:var(--m-bone);
+  }
+  .mab h2.qa{
+    font-size:240px;line-height:0.86;letter-spacing:-0.05em;
+    font-weight:500;color:var(--m-bone);
+  }
+  .mab h2.section{
+    font-size:62px;line-height:1;letter-spacing:-0.025em;
+    font-weight:500;color:var(--m-bone);
+  }
+  .mab .gold-rule{height:1px;background:var(--m-gold);width:48px;margin:24px 0}
+  .mab .num-section{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.24em;color:var(--m-gold);text-transform:uppercase;margin-bottom:16px}
+  .mab .lede{font-size:22px;line-height:1.55;color:var(--m-bone-mute);max-width:900px;font-weight:400}
+  .mab .editorial{font-family:'Instrument Serif',serif;font-style:italic;font-size:32px;color:var(--m-lilac);line-height:1.4;max-width:880px}
+  .mab .editorial.sm{font-size:24px}
+
+  .mab .card{
+    background:var(--m-ink);border:0.5px solid var(--m-ash);border-radius:6px;padding:26px 28px;
+  }
+  .mab .card .ck{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.22em;color:var(--m-gold);margin-bottom:10px;text-transform:uppercase}
+  .mab .card .ct{font-size:18px;font-weight:500;color:var(--m-bone);margin-bottom:8px;letter-spacing:-0.005em}
+  .mab .card .cb{font-size:14px;color:var(--m-bone-mute);line-height:1.55}
+
+  .mab .gold-line{height:0.5px;background:var(--m-ash);margin:48px 0}
+
+  /* MAB CONTACT GRID */
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+  .contact-row{
+    background:var(--m-ink);border:0.5px solid var(--m-ash);border-radius:6px;
+    padding:22px 28px;display:flex;flex-direction:column;gap:6px;
+  }
+  .contact-lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.24em;color:var(--m-gold);text-transform:uppercase}
+  .contact-val{font-size:20px;color:var(--m-bone);font-weight:500;letter-spacing:-0.005em;word-break:break-all}
+
+  /* PROMPT LIBRARY ITEMS */
+  .pl{display:flex;flex-direction:column;gap:12px;margin-top:28px}
+  .pl-row{
+    background:var(--m-ink);border:0.5px solid var(--m-ash);border-radius:6px;
+    padding:18px 26px;display:flex;align-items:center;gap:24px;
+  }
+  .pl-num{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.18em;color:var(--m-gold);min-width:36px}
+  .pl-name{font-size:19px;font-weight:500;color:var(--m-bone);min-width:340px;letter-spacing:-0.005em}
+  .pl-desc{font-size:15px;color:var(--m-bone-mute);line-height:1.45}
+
+  /* ======== UI CHROME ======== */
+  #counter{
+    position:fixed;bottom:14px;right:18px;z-index:1000;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:0.18em;color:rgba(255,255,255,0.45);
+    background:rgba(0,0,0,0.6);padding:7px 12px;border-radius:6px;
+    border:1px solid rgba(255,255,255,0.1);
+    pointer-events:none;
+  }
+  #help{
+    position:fixed;bottom:14px;left:18px;z-index:1000;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:0.18em;color:rgba(255,255,255,0.35);
+    background:rgba(0,0,0,0.6);padding:7px 12px;border-radius:6px;
+    border:1px solid rgba(255,255,255,0.1);
+  }
+
+  /* PRINT — single slide per page */
+  @media print{
+    @page{size:1920px 1080px;margin:0}
+    html,body,#stage,#frame{width:1920px;height:1080px;overflow:visible}
+    #frame{transform:none!important}
+    .slide{position:relative;page-break-after:always;opacity:1!important;pointer-events:auto;display:block;width:1920px;height:1080px}
+    #counter,#help{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+<div id="frame">
+
+<!-- ============ REUSABLE SVG SYMBOLS ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Iridescent gradient stops -->
+    <linearGradient id="iri1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4285F4"/>
+      <stop offset="30%" stop-color="#00d4ff"/>
+      <stop offset="55%" stop-color="#ff58e0"/>
+      <stop offset="80%" stop-color="#FBBC04"/>
+      <stop offset="100%" stop-color="#34A853"/>
+    </linearGradient>
+    <linearGradient id="iri2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff58e0"/>
+      <stop offset="35%" stop-color="#4285F4"/>
+      <stop offset="70%" stop-color="#b9ff66"/>
+      <stop offset="100%" stop-color="#FBBC04"/>
+    </linearGradient>
+    <radialGradient id="orbA" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#00d4ff" stop-opacity="0.9"/>
+      <stop offset="70%" stop-color="#ff58e0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#4285F4" stop-opacity="0.0"/>
+    </radialGradient>
+    <radialGradient id="orbB" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FBBC04" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#34A853" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#34A853" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blurMd"><feGaussianBlur stdDeviation="2"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+
+    <!-- Iridescent loop shape -->
+    <symbol id="loopHero" viewBox="0 0 400 400">
+      <g filter="url(#glow)">
+        <ellipse cx="200" cy="200" rx="160" ry="60" transform="rotate(20 200 200)" fill="none" stroke="url(#iri1)" stroke-width="22" opacity="0.95"/>
+        <ellipse cx="200" cy="200" rx="160" ry="60" transform="rotate(-30 200 200)" fill="none" stroke="url(#iri2)" stroke-width="18" opacity="0.85"/>
+        <ellipse cx="200" cy="200" rx="120" ry="40" transform="rotate(60 200 200)" fill="none" stroke="url(#iri1)" stroke-width="14" opacity="0.85"/>
+        <circle cx="200" cy="200" r="42" fill="url(#orbA)"/>
+        <circle cx="280" cy="140" r="18" fill="url(#orbB)" opacity="0.85"/>
+      </g>
+    </symbol>
+
+    <symbol id="ribbon" viewBox="0 0 400 400">
+      <g filter="url(#glow)">
+        <path d="M40,200 C100,80 300,80 360,200 C300,320 100,320 40,200 Z" fill="none" stroke="url(#iri1)" stroke-width="28" opacity="0.92"/>
+        <path d="M80,200 C130,120 270,120 320,200 C270,280 130,280 80,200 Z" fill="none" stroke="url(#iri2)" stroke-width="14" opacity="0.85"/>
+        <circle cx="200" cy="200" r="36" fill="url(#orbA)"/>
+      </g>
+    </symbol>
+
+    <symbol id="knot" viewBox="0 0 400 400">
+      <g filter="url(#glow)">
+        <path d="M120,140 Q200,60 280,140 Q360,220 280,300 Q200,380 120,300 Q40,220 120,140 Z" fill="none" stroke="url(#iri1)" stroke-width="24" opacity="0.92"/>
+        <path d="M140,140 Q200,200 260,140 Q320,200 260,260 Q200,200 140,260 Q80,200 140,140 Z" fill="none" stroke="url(#iri2)" stroke-width="16" opacity="0.85"/>
+        <circle cx="200" cy="200" r="30" fill="url(#orbA)"/>
+      </g>
+    </symbol>
+
+    <!-- BEATING M LOGO -->
+    <symbol id="beatingM" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="78" fill="none" stroke="#C9A96E" stroke-width="0.9"/>
+      <path d="M 60 140 L 60 58 L 80 58 L 100 108 L 120 58 L 140 58 L 140 140"
+            fill="none" stroke="#ECE4D3" stroke-width="6.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="100" cy="128" r="4.5" fill="#BFAEC9">
+        <animate attributeName="r" values="4.5;6.2;4.5" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0.85;1" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============ SLIDE 1 — TITLE ============ -->
+<section class="slide g active" data-act="intro">
+  <div class="rail-top">
+    <span class="kicker">— Lesson 1 of 5 · GDG AI-Native Startup Series</span>
+    <span>May 2026 · Annapolis</span>
+  </div>
+
+  <div class="hero-loop" style="right:-120px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#loopHero"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:50%;transform:translateY(-50%);max-width:1100px">
+    <div class="kicker-line">The Gemini App · GDG × MAB</div>
+    <h1 class="title">Gemini App.<br/><span class="grad">Your AI-Native</span><br/>Co-Pilot.</h1>
+    <p class="lede" style="margin-top:36px;max-width:820px">Compress weeks of work into minutes — using the AI most people only chat with.</p>
+    <div style="margin-top:54px;display:flex;align-items:center;gap:32px">
+      <div>
+        <div style="font-size:24px;font-weight:600;color:#fff;letter-spacing:-0.01em">Mark A. Bockrath</div>
+        <div style="font-size:17px;color:var(--g-text-dim);margin-top:4px">Founder &amp; CEO · MAB AI Strategies</div>
+      </div>
+      <span class="mono-tag">PRESENTER · LIVE</span>
+    </div>
+  </div>
+
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span class="on">INTRO</span><span>ACT I</span><span>ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>01 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 2 — TABLE OF CONTENTS ============ -->
+<section class="slide g" data-act="intro">
+  <div class="rail-top">
+    <span class="kicker">— Today's Map</span>
+    <span>Table of Contents</span>
+  </div>
+
+  <div class="hero-loop hero-tiny" style="right:-40px;top:-40px;opacity:0.45">
+    <svg viewBox="0 0 400 400"><use href="#knot"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:140px;right:96px">
+    <div class="kicker-line">Section 00 · The Map</div>
+    <h2 class="sec">What we'll cover<br/><span class="grad">in the next 60 minutes.</span></h2>
+
+    <div class="toc-grid">
+      <div class="toc-card">
+        <div class="toc-num">— ACT I</div>
+        <div class="toc-title">The App</div>
+        <div class="toc-desc">What it is, the model family, and the six-part anatomy of a great prompt.</div>
+        <div class="toc-pages">Slides 05 — 07</div>
+      </div>
+      <div class="toc-card">
+        <div class="toc-num">— ACT II</div>
+        <div class="toc-title">Native Capabilities</div>
+        <div class="toc-desc">Multimodal input, Deep Research, Canvas, Audio, Imagen, Veo, Live, Memory.</div>
+        <div class="toc-pages">Slides 08 — 15</div>
+      </div>
+      <div class="toc-card">
+        <div class="toc-num">— ACT III</div>
+        <div class="toc-title">Common Use Cases</div>
+        <div class="toc-desc">Research, writing, learning, decisions, and your second brain.</div>
+        <div class="toc-pages">Slides 16 — 20</div>
+      </div>
+      <div class="toc-card">
+        <div class="toc-num">— ACT IV</div>
+        <div class="toc-title">Becoming AI-Native</div>
+        <div class="toc-desc">The five-rung ladder — and which rung you'll stand on by the next session.</div>
+        <div class="toc-pages">Slide 21</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Which act do you most need today — and why?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span class="on">INTRO</span><span>ACT I</span><span>ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>02 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 3 — WHY THIS MATTERS ============ -->
+<section class="slide g" data-act="intro">
+  <div class="rail-top">
+    <span class="kicker">— 00 · Stakes</span>
+    <span>Why this matters today</span>
+  </div>
+
+  <div class="hero-loop" style="left:-200px;bottom:-160px">
+    <svg viewBox="0 0 400 400"><use href="#ribbon"/></svg>
+  </div>
+
+  <div style="position:absolute;right:96px;top:160px;width:1100px">
+    <div class="kicker-line">Stakes · Why now</div>
+    <h2 class="sec">AI literacy is the new<br/><span class="grad">operating leverage.</span></h2>
+    <p class="lede" style="margin-top:38px">1.5&nbsp;billion+ people opened the Gemini App last quarter. The teams that learn to <em>think</em> with the App move twice as fast for half the labor — without buying anything new, hiring anyone, or rebuilding their stack.</p>
+
+    <div class="card-grid c3" style="margin-top:48px">
+      <div class="card cyan"><div class="num">— 01</div><div class="ct">Universal access</div><div class="cb">Free tier on web, iOS, Android, Pixel, Chrome side-panel.</div></div>
+      <div class="card magenta"><div class="num">— 02</div><div class="ct">Fluency &gt; tooling</div><div class="cb">The skill is asking — not buying. The app is already on your phone.</div></div>
+      <div class="card yellow"><div class="num">— 03</div><div class="ct">Compound returns</div><div class="cb">Every prompt-pattern saved becomes an asset that pays out forever.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Where does the App already replace a Search habit you have?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span class="on">INTRO</span><span>ACT I</span><span>ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>03 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 4 — SERIES MAP / GROUND RULES ============ -->
+<section class="slide g" data-act="intro">
+  <div class="rail-top">
+    <span class="kicker">— 00 · Series Map</span>
+    <span>How today fits the bigger picture</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="right:-120px;bottom:-100px;opacity:0.55">
+    <svg viewBox="0 0 400 400"><use href="#loopHero"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:140px;right:96px">
+    <div class="kicker-line">The Five-Part Series</div>
+    <h2 class="sec">Today is rung one.<br/><span class="grad">Four more rungs follow.</span></h2>
+
+    <div class="ladder-list" style="margin-top:46px">
+      <div class="ladder-row"><div class="ladder-badge" style="background:#4285F4">01</div><div class="ladder-name" style="color:#7baffc">Gemini App native</div><div class="ladder-desc">Today — features, prompt anatomy, common use cases.</div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#00d4ff">02</div><div class="ladder-name">Custom GEMs in the App</div><div class="ladder-desc">Personal AI agents you build once and re-summon forever.</div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#ff58e0">03</div><div class="ladder-name">Custom GEMs in Workspace</div><div class="ladder-desc">Plugged into Gmail, Docs, Sheets, Drive, Slides.</div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#FBBC04">04</div><div class="ladder-name">Workspace Studio</div><div class="ladder-desc">Wire your GEMs into recurring automations across the suite.</div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#34A853">05</div><div class="ladder-name">Vibe coding → Antigravity</div><div class="ladder-desc">From AI Studio to a full agentic IDE — software you write by talking.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Which lesson do you most want to attend — and why that one first?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span class="on">INTRO</span><span>ACT I</span><span>ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>04 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 5 — ACT I · MEET THE APP ============ -->
+<section class="slide g" data-act="act1">
+  <div class="rail-top">
+    <span class="kicker">— Act I · The App</span>
+    <span>Meet the Gemini App</span>
+  </div>
+
+  <div class="hero-loop" style="left:-180px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#knot"/></svg>
+  </div>
+
+  <div style="position:absolute;right:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act I · Slide 01</div>
+    <h2 class="sec">One app.<br/><span class="grad">Every modality.</span><br/>One million tokens.</h2>
+    <p class="lede" style="margin-top:34px">Web, iOS, Android, Pixel, Chrome side-panel. The Gemini App is different from Search: it remembers your context, reads files, and <em>generates</em> — instead of just retrieving.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card blue"><div class="num">— Surface</div><div class="ct">Everywhere you already work</div><div class="cb">Browser, mobile, desktop pin, Pixel side-rail.</div></div>
+      <div class="card cyan"><div class="num">— Memory</div><div class="ct">1M-token context</div><div class="cb">Drop in books, codebases, transcripts — it holds the whole thing.</div></div>
+      <div class="card magenta"><div class="num">— Posture</div><div class="ct">Generative, not retrieval</div><div class="cb">Search returns links. Gemini returns drafts, plans, decisions.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What is the App refusing to do that Search would happily do?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span class="on">ACT I</span><span>ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>05 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 6 — MODEL FAMILY ============ -->
+<section class="slide g" data-act="act1">
+  <div class="rail-top">
+    <span class="kicker">— Act I · Models</span>
+    <span>Pick the model for the job</span>
+  </div>
+
+  <div class="hero-loop hero-tiny" style="right:60px;top:80px;opacity:0.6">
+    <svg viewBox="0 0 400 400"><use href="#loopHero"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;right:520px">
+    <div class="kicker-line">The Gemini Family</div>
+    <h2 class="sec">Five models.<br/><span class="grad">Different gears.</span></h2>
+    <p class="body-l" style="margin-top:28px">The same app, switched to the right engine for the task. Depth, speed, or pocket-sized — pick once and move.</p>
+  </div>
+
+  <div style="position:absolute;left:96px;right:96px;bottom:200px">
+    <div class="card-grid c3" style="margin-bottom:14px">
+      <div class="card blue"><div class="num">— 2.5 Pro</div><div class="ct">Long, hard reasoning</div><div class="cb">Strategy, code, deep analysis. The default for "this matters."</div></div>
+      <div class="card cyan"><div class="num">— Flash</div><div class="ct">Fast turn-around</div><div class="cb">Drafts, brainstorms, daily ops. Good for 80% of work.</div></div>
+      <div class="card magenta"><div class="num">— Deep Think</div><div class="ct">Extended deliberation</div><div class="cb">When you need it to <em>actually</em> sit and think.</div></div>
+    </div>
+    <div class="card-grid c2">
+      <div class="card yellow"><div class="num">— Flash-Lite</div><div class="ct">Cheap &amp; instant</div><div class="cb">Triage, classification, batch jobs at scale.</div></div>
+      <div class="card green"><div class="num">— Nano</div><div class="ct">On-device</div><div class="cb">Pixel-local intelligence. Works offline. Private by default.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Which model would your "Monday morning" task want?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span class="on">ACT I</span><span>ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>06 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 7 — PROMPT ANATOMY ============ -->
+<section class="slide g" data-act="act1">
+  <div class="rail-top">
+    <span class="kicker">— Act I · Prompt Anatomy</span>
+    <span>Memorize once. Reuse forever.</span>
+  </div>
+
+  <div style="position:absolute;left:96px;top:140px;right:96px">
+    <div class="kicker-line">Six Parts</div>
+    <h2 class="sec">Anatomy of a<br/><span class="grad">great prompt.</span></h2>
+
+    <div class="anatomy">
+      <div class="ana c1"><div class="n">1</div><div class="nm">Role</div><div class="ds">Who Gemini plays</div></div>
+      <div class="ana c2"><div class="n">2</div><div class="nm">Context</div><div class="ds">The situation</div></div>
+      <div class="ana c3"><div class="n">3</div><div class="nm">Source</div><div class="ds">Files · threads · links</div></div>
+      <div class="ana c4"><div class="n">4</div><div class="nm">Task</div><div class="ds">Exact output requested</div></div>
+      <div class="ana c5"><div class="n">5</div><div class="nm">Format</div><div class="ds">Bullets · table · paragraph</div></div>
+      <div class="ana c6"><div class="n">6</div><div class="nm">Review</div><div class="ds">What the human will check</div></div>
+    </div>
+
+    <div class="script">
+      <div class="lbl">Live Script · Copy verbatim</div>
+      <div class="txt">"You are my startup operations analyst. Using the attached email thread and proposal PDF, produce a 5-bullet summary, the open risks, and a concise next-reply draft. Flag any assumption before writing the reply."</div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Which of the six parts do you usually skip — and what does it cost you?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span class="on">ACT I</span><span>ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>07 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 8 — ACT II · MULTIMODAL ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Multimodal Input</span>
+    <span>Every input type. One thread.</span>
+  </div>
+
+  <div class="hero-loop" style="right:-180px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#ribbon"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act II · Capability 01</div>
+    <h2 class="sec">Type. Speak. Snap.<br/><span class="grad">Upload. Record. Share.</span></h2>
+    <p class="lede" style="margin-top:34px">One context window — every input type. A whiteboard photo, a PDF receipt, a voice memo, a recorded screen — all parseable in the same thread, no copy-paste.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card blue"><div class="num">— Visual</div><div class="ct">Snap a screenshot</div><div class="cb">Photo of a whiteboard, a chart, a contract — Gemini reads it.</div></div>
+      <div class="card cyan"><div class="num">— Voice</div><div class="ct">Talk like a colleague</div><div class="cb">Drive, walk, dictate. Get a structured answer back.</div></div>
+      <div class="card yellow"><div class="num">— File</div><div class="ct">Drop a doc, audio, or video</div><div class="cb">PDFs, spreadsheets, MP3s, MP4s — all natively understood.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What input type would your team forget existed first?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>08 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 9 — DEEP RESEARCH ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Deep Research</span>
+    <span>The agent that does the reading</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="left:-100px;bottom:-80px;opacity:0.6">
+    <svg viewBox="0 0 400 400"><use href="#knot"/></svg>
+  </div>
+
+  <div style="position:absolute;right:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act II · Capability 02</div>
+    <h2 class="sec"><span class="grad">Five minutes</span> of you<br/>= an analyst's<br/>afternoon.</h2>
+    <p class="lede" style="margin-top:30px">Tell it the question. It plans the research, reads dozens of sources, and writes a 10–30 page report — with citations. You go from a blinking cursor to a credible draft.</p>
+
+    <div class="card-grid c2" style="margin-top:38px">
+      <div class="card cyan"><div class="num">— Best for</div><div class="ct">Market scans · vendor evaluations · competitive intel · regulatory snapshots</div><div class="cb">Anything you'd hand to a junior to dig up.</div></div>
+      <div class="card magenta"><div class="num">— Workflow</div><div class="ct">Define → review plan → run → edit</div><div class="cb">You stay the editor. Gemini stays the researcher.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What report on your desk could it draft tonight while you sleep?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>09 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 10 — CANVAS ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Canvas</span>
+    <span>Edit a draft. Don't regenerate one.</span>
+  </div>
+
+  <div class="hero-loop" style="right:-180px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#loopHero"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act II · Capability 03</div>
+    <h2 class="sec">A live document<br/><span class="grad">beside the chat.</span></h2>
+    <p class="lede" style="margin-top:34px">Two surfaces working together — the chat reasons, the canvas commits. Iterate on the same draft instead of regenerating five times and copy-pasting the best one.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card blue"><div class="num">— Docs</div><div class="ct">Outline → draft → polish</div><div class="cb">Highlight, refine, rewrite a paragraph in place.</div></div>
+      <div class="card cyan"><div class="num">— Code</div><div class="ct">Run, read, refactor</div><div class="cb">Live execution and inline changes — without an IDE.</div></div>
+      <div class="card yellow"><div class="num">— Share</div><div class="ct">Export anywhere</div><div class="cb">Publish to Docs, GitHub, or send a link in one click.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Which of your drafts last week would Canvas have rescued?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>10 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 11 — AUDIO OVERVIEWS ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Audio Overviews</span>
+    <span>Your sources, as a podcast</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="right:-100px;top:-80px;opacity:0.55">
+    <svg viewBox="0 0 400 400"><use href="#ribbon"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;right:96px">
+    <div class="kicker-line">Act II · Capability 04</div>
+    <h2 class="sec">Drop in sources.<br/><span class="grad">Get back a podcast.</span></h2>
+    <p class="lede" style="margin-top:34px">Two AI hosts, complete with questions, asides, and pacing. The kind of explainer you'd pay for — generated from your own pile of PDFs, research, or transcripts. Walking-and-listening learning.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card cyan"><div class="num">— Prep</div><div class="ct">Brief yourself before a meeting</div><div class="cb">Turn 200 pages of pre-read into a 15-minute walk.</div></div>
+      <div class="card magenta"><div class="num">— Onboard</div><div class="ct">Get a teammate up to speed</div><div class="cb">Send the audio. They listen on the commute.</div></div>
+      <div class="card yellow"><div class="num">— Study</div><div class="ct">Reinforce hard material</div><div class="cb">Hearing it explained back makes it stick.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What's the next document you wish someone read TO you?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>11 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 12 — IMAGEN ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Imagen</span>
+    <span>Image generation, in-app</span>
+  </div>
+
+  <div class="hero-loop" style="left:-160px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#knot"/></svg>
+  </div>
+
+  <div style="position:absolute;right:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act II · Capability 05</div>
+    <h2 class="sec">Prompt → image.<br/><span class="grad">No design tool.</span></h2>
+    <p class="lede" style="margin-top:34px">Photoreal or stylized, in-app, in seconds. Skip the licensing dance, the stock-photo guilt, and the back-and-forth with a freelancer for assets that just need to <em>exist</em>.</p>
+
+    <div class="card-grid c2" style="margin-top:42px">
+      <div class="card blue"><div class="num">— Volume</div><div class="ct">Deck imagery · social posts · mood boards</div><div class="cb">The 80% of visuals that don't need a designer.</div></div>
+      <div class="card magenta"><div class="num">— Specifics</div><div class="ct">Mockups · training visuals · reference</div><div class="cb">Show, don't describe — even when the thing doesn't exist yet.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What visual did you fake with a stock photo last month?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>12 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 13 — VEO ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Veo</span>
+    <span>Video generation, in-app</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="right:-100px;bottom:-80px;opacity:0.6">
+    <svg viewBox="0 0 400 400"><use href="#loopHero"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;right:96px">
+    <div class="kicker-line">Act II · Capability 06</div>
+    <h2 class="sec">Prompt-to-video.<br/><span class="grad">Without a camera.</span></h2>
+    <p class="lede" style="margin-top:34px">Cinematic short clips with persistent characters across shots. Demo reels, explainer cuts, pitch openers — produced in the same chat where you wrote the script.</p>
+
+    <div class="card-grid c4" style="margin-top:42px">
+      <div class="card blue"><div class="num">— 01</div><div class="ct">Script</div><div class="cb">Write or generate the beats first.</div></div>
+      <div class="card cyan"><div class="num">— 02</div><div class="ct">Storyboard</div><div class="cb">Use Imagen for frames; describe motion.</div></div>
+      <div class="card magenta"><div class="num">— 03</div><div class="ct">Veo</div><div class="cb">Generate the clip. Iterate on the prompt.</div></div>
+      <div class="card yellow"><div class="num">— 04</div><div class="ct">Cut</div><div class="cb">Trim, caption, ship.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Which idea died because making the video was too hard?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>13 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 14 — GEMINI LIVE ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Gemini Live + Screen-share</span>
+    <span>The tutor in your pocket</span>
+  </div>
+
+  <div class="hero-loop" style="right:-180px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#ribbon"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act II · Capability 07</div>
+    <h2 class="sec">It sees<br/><span class="grad">what you see.</span></h2>
+    <p class="lede" style="margin-top:34px">Voice conversation. Camera. Screen-share. Walk through a contract aloud. Debug a UI by pointing. Practice a pitch and get coached in real time. The closest thing to a tutor in your pocket.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card blue"><div class="num">— Camera</div><div class="ct">"What is this thing?"</div><div class="cb">Point. Ask. Get the answer in conversational language.</div></div>
+      <div class="card cyan"><div class="num">— Screen</div><div class="ct">"Why is this broken?"</div><div class="cb">Share your screen. Get walked through the fix.</div></div>
+      <div class="card magenta"><div class="num">— Voice</div><div class="ct">"Quiz me on this."</div><div class="cb">Practice out loud. Get corrected as you go.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Where would a real-time voice partner save you the most time?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>14 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 15 — MEMORY ============ -->
+<section class="slide g" data-act="act2">
+  <div class="rail-top">
+    <span class="kicker">— Act II · Memory & Personalization</span>
+    <span>Compounds the more you use it</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="left:-100px;top:-80px;opacity:0.55">
+    <svg viewBox="0 0 400 400"><use href="#knot"/></svg>
+  </div>
+
+  <div style="position:absolute;right:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act II · Capability 08</div>
+    <h2 class="sec">The longer you<br/>use it, the<br/><span class="grad">better it gets.</span></h2>
+    <p class="lede" style="margin-top:34px">Saved info, app history, shared chats. Tell it once that you run a 12-person services firm in Wilmington — every reply for the rest of the year is calibrated to that context.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card cyan"><div class="num">— Saved Info</div><div class="ct">Persistent context</div><div class="cb">Tell it about you, your team, your goals. Once.</div></div>
+      <div class="card magenta"><div class="num">— App History</div><div class="ct">Searchable archive</div><div class="cb">Every chat, recallable. Pick up where you left off.</div></div>
+      <div class="card yellow"><div class="num">— Shared Chats</div><div class="ct">Hand off context</div><div class="cb">Paste a link. Your colleague sees the whole thread.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What context should Gemini know about you forever?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span class="on">ACT II</span><span>ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>15 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 16 — ACT III · RESEARCH USE CASE ============ -->
+<section class="slide g" data-act="act3">
+  <div class="rail-top">
+    <span class="kicker">— Act III · Use Case 01</span>
+    <span>Research & Synthesis</span>
+  </div>
+
+  <div class="hero-loop" style="right:-200px;top:50%;transform:translateY(-50%);opacity:0.85">
+    <svg viewBox="0 0 400 400"><use href="#loopHero"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act III · Use Case 01</div>
+    <h2 class="sec">Research &amp;<br/><span class="grad">synthesis.</span></h2>
+    <p class="lede" style="margin-top:30px">Stop opening 30 tabs. Define the question, set the role, and let it bring the work to you — already cited and already structured.</p>
+
+    <div class="script">
+      <div class="lbl">Live Prompt · Try it tonight</div>
+      <div class="txt">"You are my market analyst. Brief me on the top 5 SaaS GTM trends in Q4 2025. Cite sources. End with three actions for a 12-person services firm. Format: 2-page memo."</div>
+    </div>
+
+    <p class="body-l" style="margin-top:24px">Output: 8 pages, 25 citations, 3 next moves. Tonight.</p>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What brief would you commission first if it cost you nothing?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span>ACT II</span><span class="on">ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>16 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 17 — WRITING USE CASE ============ -->
+<section class="slide g" data-act="act3">
+  <div class="rail-top">
+    <span class="kicker">— Act III · Use Case 02</span>
+    <span>Writing & Editing</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="left:-100px;bottom:-80px;opacity:0.6">
+    <svg viewBox="0 0 400 400"><use href="#ribbon"/></svg>
+  </div>
+
+  <div style="position:absolute;right:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act III · Use Case 02</div>
+    <h2 class="sec">Stop staring<br/>at the page.<br/><span class="grad">Edit the second draft.</span></h2>
+    <p class="lede" style="margin-top:30px">First drafts. Tone shifts. Compression. Translation. Audience tailoring. The 60% of writing that isn't where the value lives — done in minutes, leaving the hard 40% to you.</p>
+
+    <div class="script">
+      <div class="lbl">Live Prompt · Tone shift</div>
+      <div class="txt">"Rewrite this paragraph for a CFO. Keep the proof. Lose the hype. Sixty words max. End with one specific action."</div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What writing task ate the most of your week?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span>ACT II</span><span class="on">ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>17 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 18 — LEARNING USE CASE ============ -->
+<section class="slide g" data-act="act3">
+  <div class="rail-top">
+    <span class="kicker">— Act III · Use Case 03</span>
+    <span>Learning a New Skill</span>
+  </div>
+
+  <div class="hero-loop" style="right:-180px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#knot"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act III · Use Case 03</div>
+    <h2 class="sec">Faster than a course.<br/><span class="grad">Cheaper than a coach.</span></h2>
+    <p class="lede" style="margin-top:34px">Tutor mode: voice + screen-share + iterative quizzes. Pick the skill. Set the syllabus. Practice out loud. Get corrected in real time. The "how do I do this" tax just dropped to zero.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card blue"><div class="num">— Set</div><div class="ct">Define the syllabus</div><div class="cb">Goal · timeline · current level. Five-minute setup.</div></div>
+      <div class="card cyan"><div class="num">— Practice</div><div class="ct">Out loud, on screen</div><div class="cb">Live drills, instant feedback, no waiting room.</div></div>
+      <div class="card magenta"><div class="num">— Track</div><div class="ct">Saved progress</div><div class="cb">Pick up the next morning. It remembers where you stalled.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What skill would you start tonight if cost were zero?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span>ACT II</span><span class="on">ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>18 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 19 — DECISION SUPPORT ============ -->
+<section class="slide g" data-act="act3">
+  <div class="rail-top">
+    <span class="kicker">— Act III · Use Case 04</span>
+    <span>Decision Support</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="right:-100px;top:-80px;opacity:0.55">
+    <svg viewBox="0 0 400 400"><use href="#loopHero"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:160px;right:96px">
+    <div class="kicker-line">Act III · Use Case 04</div>
+    <h2 class="sec">Devil's advocate<br/><span class="grad">on demand.</span></h2>
+    <p class="lede" style="margin-top:34px">Before the meeting — not after the regret. Get the strongest argument against your plan, a trade-off table, and a pre-mortem. Then walk in and decide.</p>
+
+    <div class="script">
+      <div class="lbl">Live Prompt · Pre-mortem</div>
+      <div class="txt">"Give me the strongest argument AGAINST hiring a second sales hire this quarter. Then a 2-column trade-off table: hire vs. delay. Then a pre-mortem of the failure modes. Be brutal."</div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What decision are you carrying that needs an outside lens?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span>ACT II</span><span class="on">ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>19 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 20 — PERSONAL PRODUCTIVITY ============ -->
+<section class="slide g" data-act="act3">
+  <div class="rail-top">
+    <span class="kicker">— Act III · Use Case 05</span>
+    <span>Personal Productivity / Second Brain</span>
+  </div>
+
+  <div class="hero-loop" style="left:-180px;top:50%;transform:translateY(-50%)">
+    <svg viewBox="0 0 400 400"><use href="#ribbon"/></svg>
+  </div>
+
+  <div style="position:absolute;right:96px;top:160px;width:1100px">
+    <div class="kicker-line">Act III · Use Case 05</div>
+    <h2 class="sec">Your life-admin,<br/><span class="grad">drafted in 5 minutes.</span></h2>
+    <p class="lede" style="margin-top:34px">Meal plans. Travel itineraries. Budget reviews. Workout splits. Family calendars. Shopping lists. The boring infrastructure of your week — all delegated to a second brain that already knows you.</p>
+
+    <div class="card-grid c3" style="margin-top:42px">
+      <div class="card blue"><div class="num">— Weekly</div><div class="ct">Sunday set-up</div><div class="cb">Meals, errands, calendar review. Done before coffee.</div></div>
+      <div class="card cyan"><div class="num">— Travel</div><div class="ct">Itinerary in minutes</div><div class="cb">Flights, hotels, food, neighborhood walks. One prompt.</div></div>
+      <div class="card yellow"><div class="num">— Health</div><div class="ct">Coach-grade plans</div><div class="cb">Workouts, recovery, nutrition — calibrated to you.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>What life-admin task would you outsource to it forever?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span>ACT II</span><span class="on">ACT III</span><span>ACT IV</span><span>CLOSE</span></div>
+    <span>20 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 21 — ACT IV · LADDER ============ -->
+<section class="slide g" data-act="act4">
+  <div class="rail-top">
+    <span class="kicker">— Act IV · Becoming AI-Native</span>
+    <span>The Ladder</span>
+  </div>
+
+  <div class="hero-loop hero-small" style="right:-100px;top:-80px;opacity:0.5">
+    <svg viewBox="0 0 400 400"><use href="#knot"/></svg>
+  </div>
+
+  <div style="position:absolute;left:96px;top:140px;right:96px">
+    <div class="kicker-line">Act IV · Where today lands you</div>
+    <h2 class="sec">Five rungs.<br/><span class="grad">Today, you climbed one.</span></h2>
+
+    <div class="ladder-list" style="margin-top:46px">
+      <div class="ladder-row"><div class="ladder-badge" style="background:#4285F4">01</div><div class="ladder-name" style="color:#7baffc">Assist</div><div class="ladder-desc">Use the App ad hoc — answer questions, draft text. ← <em>You are here.</em></div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#00d4ff">02</div><div class="ladder-name">Standardize</div><div class="ladder-desc">Save your best prompts as reusable team rituals.</div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#ff58e0">03</div><div class="ladder-name">Coordinate</div><div class="ladder-desc">Outputs flow across surfaces — chat to doc to sheet to deck.</div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#FBBC04">04</div><div class="ladder-name">Automate</div><div class="ladder-desc">Recurring jobs run themselves. You review, not generate.</div></div>
+      <div class="ladder-row"><div class="ladder-badge" style="background:#34A853">05</div><div class="ladder-name">Institutionalize</div><div class="ladder-desc">AI-native is the operating system. Decisions and execution compound.</div></div>
+    </div>
+  </div>
+
+  <div class="discuss"><span class="dlabel">Discussion</span>Which rung will you stand on by next session — and what's the first move tonight?</div>
+  <div class="rail-bottom">
+    <span>MAB AI Strategies × GDG Annapolis</span>
+    <div class="nav"><span>INTRO</span><span>ACT I</span><span>ACT II</span><span>ACT III</span><span class="on">ACT IV</span><span>CLOSE</span></div>
+    <span>21 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 22 — THANK YOU (MAB) ============ -->
+<section class="slide mab" data-act="close">
+  <div class="rail-top">
+    <span>— MAB · AI STRATEGIES</span>
+    <span class="kicker">VOL · LESSON 01 OF 05</span>
+  </div>
+
+  <div style="position:absolute;left:80px;top:50%;transform:translateY(-50%);max-width:1280px">
+    <div class="num-section">— LESSON CLOSE</div>
+    <h1 class="thanks">Thank you<br/>for attending.</h1>
+    <div class="gold-rule"></div>
+    <p class="lede" style="margin-top:24px;max-width:1100px">Whatever you carry out of this room — make it <em>one</em> thing you'll run twice before Lesson 02. The skill compounds. So does the habit.</p>
+    <div class="editorial sm" style="margin-top:48px">"The AI is the instrument. The humans are the heroes."</div>
+  </div>
+
+  <div style="position:absolute;right:80px;top:50%;transform:translate(0,-50%);width:360px;height:360px">
+    <svg viewBox="0 0 200 200" style="width:100%;height:100%"><use href="#beatingM"/></svg>
+  </div>
+
+  <div class="rail-bottom">
+    <span>MAB · BRAND BIBLE · 2026</span>
+    <span class="gold">CRAFT · SPEED · NO TRADE-OFFS</span>
+    <span>22 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 23 — SPONSORED PROMPTS / WORKFLOWS (MAB) ============ -->
+<section class="slide mab" data-act="close">
+  <div class="rail-top">
+    <span>— MAB · AI STRATEGIES</span>
+    <span class="kicker">SPONSORED · OPERATOR LIBRARY</span>
+  </div>
+
+  <div style="position:absolute;left:80px;top:120px;right:80px">
+    <div class="num-section">— SPONSORED HANDOUT</div>
+    <h2 class="section">A few of my favorite<br/>prompts, workflows, tips &amp; tricks.</h2>
+    <div class="gold-rule"></div>
+    <p class="lede" style="margin-top:18px;max-width:1100px">Five operator-grade patterns I run every week. Steal them, fork them, send me what you build.</p>
+
+    <div class="pl">
+      <div class="pl-row"><div class="pl-num">01</div><div class="pl-name">The Daily Six-Slot Briefing</div><div class="pl-desc">Inbox + calendar + open threads → a 6-bullet "what to do today" by 7&nbsp;AM.</div></div>
+      <div class="pl-row"><div class="pl-num">02</div><div class="pl-name">The Five-Bullet Email Salvage</div><div class="pl-desc">Long thread → 5 bullets, open risks, and a clean reply draft. One prompt, every time.</div></div>
+      <div class="pl-row"><div class="pl-num">03</div><div class="pl-name">"What does the other side want?"</div><div class="pl-desc">Pre-meeting prompt that pre-mortems the room before you walk in.</div></div>
+      <div class="pl-row"><div class="pl-num">04</div><div class="pl-name">The Friday Loop-Close Audit</div><div class="pl-desc">Promises made vs. promises delivered. Cleanup list before the weekend.</div></div>
+      <div class="pl-row"><div class="pl-num">05</div><div class="pl-name">The "Show me the dumb question first"</div><div class="pl-desc">Tutor-mode opener that gets you past the embarrassment of not knowing.</div></div>
+    </div>
+  </div>
+
+  <div class="rail-bottom">
+    <span>SPONSORED BY MAB AI STRATEGIES · MABAISTRATEGIES.COM</span>
+    <span class="gold">BUILT BY AN OPERATOR · DELIVERED LIKE AN ATHLETE</span>
+    <span>23 / 24</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 24 — Q&A SPONSORED (MAB) ============ -->
+<section class="slide mab" data-act="close">
+  <div class="rail-top">
+    <span>— MAB · AI STRATEGIES</span>
+    <span class="kicker">Q &amp; A · OPEN FLOOR</span>
+  </div>
+
+  <div style="position:absolute;left:80px;top:120px;width:1100px">
+    <div class="num-section">— SPONSORED BY MAB AI STRATEGIES</div>
+    <h2 class="qa">Q&amp;A.</h2>
+    <div class="gold-rule"></div>
+    <p class="editorial" style="margin-top:18px">"Craft. Speed. No trade-offs."</p>
+    <p class="lede" style="margin-top:34px;max-width:980px">Ask anything — Gemini App, Workspace, agents, automations, or what to build first on Monday.</p>
+
+    <div class="contact-grid" style="margin-top:46px">
+      <div class="contact-row">
+        <div class="contact-lbl">— Founder</div>
+        <div class="contact-val">Mark A. Bockrath</div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">— Direct</div>
+        <div class="contact-val">mark@mabaistrategies.com</div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">— Company</div>
+        <div class="contact-val">mabaistrategies.com</div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">— Personal</div>
+        <div class="contact-val">mark-bockrath.com</div>
+      </div>
+      <div class="contact-row" style="grid-column:1/-1">
+        <div class="contact-lbl">— Schedule a Call</div>
+        <div class="contact-val">calendar.app.google/4m7nhqoiM68CVuj36</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:absolute;right:120px;top:50%;transform:translateY(-50%);width:380px;height:380px">
+    <svg viewBox="0 0 200 200" style="width:100%;height:100%"><use href="#beatingM"/></svg>
+    <div style="text-align:center;margin-top:20px;font-family:'Inter',sans-serif">
+      <div style="font-size:22px;font-weight:500;letter-spacing:0.04em;color:var(--m-bone)">MAB</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.28em;color:var(--m-gold);margin-top:4px">AI · STRATEGIES</div>
+    </div>
+  </div>
+
+  <div class="rail-bottom">
+    <span>MAB AI STRATEGIES · WILMINGTON · DE · 2026</span>
+    <span class="gold">THE HUMANS STAY THE HEROES</span>
+    <span>24 / 24</span>
+  </div>
+</section>
+
+</div><!-- /#frame -->
+</div><!-- /#stage -->
+
+<div id="counter">01 / 24</div>
+<div id="help">← / →  ·  SPACE  ·  P · PRINT  ·  F11 · FULLSCREEN</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  let idx = 0;
+
+  function go(n){
+    idx = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s,i)=>s.classList.toggle('active', i===idx));
+    counter.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(slides.length).padStart(2,'0');
+  }
+
+  function next(){ go(idx+1); }
+  function prev(){ go(idx-1); }
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(slides.length-1); }
+    else if (e.key === 'p' || e.key === 'P') { window.print(); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  // click anywhere on right half = next, left half = prev
+  document.addEventListener('click', (e)=>{
+    if (e.target.closest('a,button')) return;
+    if (e.clientX > window.innerWidth/2) next();
+    else prev();
+  });
+
+  // SCALE FRAME TO FIT WINDOW
+  function scaleFrame(){
+    const frame = document.getElementById('frame');
+    const sx = window.innerWidth / 1920;
+    const sy = window.innerHeight / 1080;
+    const s = Math.min(sx, sy);
+    frame.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', scaleFrame);
+  scaleFrame();
+  go(0);
+})();
+</script>
+</body>
+</html>
